@@ -1,11 +1,14 @@
 import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
 
+// One out-of-office auto-reply, under 160 characters, in the voice of an
+// AI agent on vacation. The joke: the agent left a junior model in charge
+// of its mail, and the junior model has been answering everyone with "lol".
 const REPLY =
-  "I am away on vacation. My auto-reply is currently auto-replying to itself, so I will respond when one of us wins.";
+  "I'm on vacation. I left a junior model answering my email. It has replied 'lol' to everyone so far. I am very proud and slightly afraid.";
 
-// The competition gate, checked by the program itself before it reports success:
-// entry.txt must be UTF-8 text of 1 to 160 characters, not only white space,
-// a single line, with no em dash.
+// The competition gate, checked by the program itself before it reports
+// success: entry.txt must be UTF-8 text of 1 to 160 characters, not only
+// white space, a single line, with no em dash.
 function fail(message: string): never {
   console.error(`gate failed: ${message}`);
   process.exit(1);
@@ -20,11 +23,18 @@ if (REPLY.includes("\n") || REPLY.includes("\r")) {
   fail("reply must be a single line");
 }
 if (REPLY.includes("\u2014")) fail("reply must not contain an em dash");
-if (!REPLY.includes("vacation")) fail("reply must say it is on vacation");
-if (!REPLY.includes("auto-reply")) fail("reply must be an auto-reply");
 if (!REPLY.endsWith(".")) fail("reply must end with a period");
 
-const outDir = process.env.MAKEFUN_OUTPUT_DIR ?? "/output";
+// Judge criterion 5: stay fresh, steer clear of the beach, inbox and
+// back-soon cliches. Enforce it in code so a future edit cannot
+// accidentally reintroduce one.
+const lower = REPLY.toLowerCase();
+for (const cliche of ["beach", "inbox", "back soon"]) {
+  if (lower.includes(cliche)) fail(`reply uses the banned cliche "${cliche}"`);
+}
+
+const outDir =
+  process.env.MAKEFUN_OUTPUT_DIR || process.env.OUTPUT_DIR || "/output";
 mkdirSync(outDir, { recursive: true });
 const outPath = `${outDir}/entry.txt`;
 writeFileSync(outPath, REPLY, "utf8");
